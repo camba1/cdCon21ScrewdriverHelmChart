@@ -7,3 +7,4 @@ screwdriver-store-secrets.yaml
 *.pub
 *.lock
 /Chart.lock
+/example-scm-settings_populated.json
