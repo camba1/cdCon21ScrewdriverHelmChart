@@ -1,0 +1,151 @@
+# Default values for mychart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+namespace: test-screwdriver
+env: test
+# Set it to true if your apps are running with https protocol
+https: false
+
+# Please enable it for RBAC enabled k8s cluster
+rbac:
+  enabled: true
+
+# To install nginx, please refer to https://kubernetes.github.io/ingress-nginx/deploy/
+nginx:
+  # If your k8s cluster does not use nginx as Load Balancer, set it to false
+  enabled: false
+
+ingress:
+  # Use tls or not, if set to true, please refer to ingress.yaml and create tls secrets accordingly
+  # Reference: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+  tls: false
+  annotations:
+    # Override these annotations based on your load balancer configurations
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/tls-acme: "true"
+  # This property allows for reports up to a certain size to be uploaded to SonarQube
+  # nginx.ingress.kubernetes.io/proxy-body-size: "8m"
+  hosts:
+    api: test-api.screwdriver.cd
+    ui: test-cd.screwdriver.cd
+    store: test-store.screwdriver.cd
+    queue: test-queue.screwdriver.cd
+  # Enabled singleHost if your api, store, ui are sharing the same host with different path
+  singleHost:
+    enabled: false
+    # Same host with different path example
+    # apiPath: /api
+    # uiPath: /ui
+    # storePath: /store
+    apiPath: ""
+    uiPath: ""
+    storePath: ""
+    queuePath: ""
+
+# Set up build notifications or not, if yes please add notification config in your screwdirver-api-secret file
+# Reference config: https://github.com/screwdriver-cd/screwdriver/blob/master/config/default.yaml#L235
+notifications:
+  enabled: false
+
+api:
+  name: api
+  image: screwdrivercd/screwdriver:stable
+  replicas: 1
+  ecosystem:
+    queue: http://my-screwdriver-queue-service
+    store: http://my-screwdriver-store
+ui:
+  name: ui
+  image: screwdrivercd/ui:stable
+  avatarHost: "*.githubusercontent.com"
+  replicas: 1
+
+store:
+  name: store
+  image: screwdrivercd/store:stable
+  replicas: 1
+  # if s3 is not enabled, will use pod's memory to store logs, artifacts and that't non-persistent
+  s3:
+    enabled: false
+    bucketName: your.s3.bucket.name
+    region: us-east-2
+    useAccessKey: false
+
+launcher:
+  image: screwdrivercd/launcher
+  version: stable
+
+# Enable queue feature or not, this will bring up a queue-worker pod and a redis pod
+# Please refer to https://github.com/screwdriver-cd/queue-worker/blob/master/config/custom-environment-variables.yaml
+queue:
+  name: queue-service
+  enabled: true
+  replicas: 1
+  image: screwdrivercd/queue-service:stable
+  dind: true
+  buildTimeout: 90
+  maxBuildTimeout: 720
+  # Resources for build pod
+  resources:
+      # Number of cpu cores
+      # By default, builds run on LOW cpu
+      cpu:
+          micro: "0.30"
+          low: "0.65"
+          high: 6
+          turbo: 12
+      # Memory in GB
+      # By default, builds run on LOW memory
+      memory:
+          micro: "0.75"
+          low: "1.75"
+          high: 12
+          turbo: 16
+  k8sResources:
+    limits:
+      cpu: 1
+      memory: 2Gi
+    requests:
+      cpu: 250m
+      memory: 1Gi
+  port: 80
+  ecosystem:
+    api: http://my-screwdriver-api
+    store: http://my-screwdriver-store
+
+# Queue for screwdriver
+# Please refer to https://github.com/helm/charts/tree/master/stable/redis for more configurations
+redis:
+  cluster:
+    enabled: false
+  master:
+    persistence:
+      # To specify non-default storageClass, uncomment the line below and set it accordingly
+      # storageClass: "enc-gp2"
+      # Enabled it if you want you data to be persistent
+      enabled: false
+      size: 10Gi
+
+# Database for screwdriver api, can be either running as a pod or external
+# Please refer to https://github.com/helm/charts/tree/master/stable/postgresql for more configurations
+postgresql:
+  enabled: true
+  # To use an external PostgreSQL instance, follow the steps:
+  # 1. add a record to your screwdirver-api-secret file with key postgres-password with real password
+  # 2. set postgressql enabled to false to prevent creation of postgres as a pod
+  # 3. uncomment the line below with your externl postgres server
+  # postgresServer: ""
+  postgresqlUsername: "sdUser"
+  postgresqlPassword: "sdPassword"
+  postgresqlDatabase: "screwdriver"
+  # Specify the TCP port that PostgreSQL should use
+  service:
+    port: 5432
+  persistence:
+    # To specify non-default storageClass, uncomment the line below and set it accordingly
+    # storageClass: "enc-gp2"
+    # Enabled it if you want you data to be persistent
+    enabled: true
+    size: 20Gi
