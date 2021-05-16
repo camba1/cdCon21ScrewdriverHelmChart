@@ -1,6 +1,6 @@
 ## Install Screwdriver in Minikube with a Helm chart 
 
-This repo helps install Screwdriver using a Helm chart. The original helm chart repo can be at https://github.com/screwdriver-cd/screwdriver-chart
+This repo helps install Screwdriver using a Helm chart. The original helm chart repo can be found at https://github.com/screwdriver-cd/screwdriver-chart
 
 ## Prerequisites
 
@@ -53,6 +53,7 @@ At the time of this writing the generate_secrets script could cause the followin
 - The randomly generated values are supposed to be at least 32 characters long (a requirements for some services). However, sometimes the values are too short which causes the application to fail
 Note that The script does not back up the current secret values, so each time the script is run the current values are lost. 
 As such, backup the values manually before running the script if needed
+
 Note: Make sure the ```jwtqueuesvcpublickey``` and the ```queue-jwtpublickey``` secrets are set to the same value, otherwise the api may not be able to communicate with the queue service.
 
 ## Set up the Screwdriver configuration
@@ -60,7 +61,7 @@ Note: Make sure the ```jwtqueuesvcpublickey``` and the ```queue-jwtpublickey``` 
 Configure the Values.yaml file with the desired configuration to run Screwdriver.
 Note that this repo contains the values commonly used to run Screwdriver in Minikube for personal projects.
 This document discusses some of the most important values that need to be configured.
-For the purposes of this discussion, it is assumed that we are setting a test environment in the test-screwdriver K8s namespace.
+For the purposes of this discussion, it is assumed that we are setting a `test` environment in the `test-screwdriver` K8s namespace.
 
 ```yaml
 namespace: test-screwdriver
@@ -78,7 +79,7 @@ postgresql.persistence.size: 20Gi  # Amount of space allocated to persistent sto
 ```
 
 Notes:
-- Be very conservative with ```queue.resources.cpu``` request values as there will be Screwdriver will instantiate multiple pods at each step of a job. If the resource request are too high, the pods will not get scheduled. The values in this repo's Values.yaml for low cpu are the most a 3 cpu Minikube cluster can handle with dind jobs enabled
+- Be very conservative with ```queue.resources.cpu``` request values as  Screwdriver will instantiate multiple pods at each step of a job. If the resource request are too high, the pods will not get scheduled. The values in this repo's `Values.yaml` for `low` cpu category are the most a 3 cpu Minikube cluster can handle with dind jobs enabled
 - Running a single Redis instance is good in a resource constrained environments
 - The api.ecosystem and queue.ecosystem URLs must be set as described above for proper inter-service communication
 
